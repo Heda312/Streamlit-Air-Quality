@@ -1,39 +1,86 @@
-# Air Quality Dashboard #
+# Air Quality Dashboard
 
 Dashboard interaktif untuk analisis kualitas udara menggunakan dataset PRSA Beijing Air Quality dan Streamlit.
 
-## Cara Menjalankan
+## Struktur Project
 
-1. Install library yang dibutuhkan
+project/
 
-[bash]
-pip install streamlit pandas matplotlib seaborn numpy
+- dashboard.py
+- requirements.txt
+- README.md
+- file dataset CSV
 
-2. Pastikan file `dashboard.py` dan seluruh file dataset `.csv` berada dalam satu folder.
+## Membuat Virtual Environment
 
-3. Jalankan aplikasi Streamlit
+# Windows:
 
-[bash]
+python -m venv venv
+
+Aktifkan environment:
+
+venv\Scripts\activate
+
+# Linux / MacOS:
+
+python3 -m venv venv
+
+Aktifkan environment:
+
+source venv/bin/activate
+
+## Install Library
+
+Install seluruh library menggunakan:
+
+pip install -r requirements.txt
+
+## Menjalankan Dashboard
+
+Jalankan perintah berikut:
+
 streamlit run dashboard.py
 
-4. Buka browser dan akses:
+Aplikasi akan berjalan pada browser:
 
-[bash]
 http://localhost:8501
 
 ## Fitur Dashboard
 
-- Filter station
-- Filter tahun
-- Statistik data
-- Visualisasi PM2.5 dan PM10
-- Heatmap korelasi
-- Download dataset hasil filter
+- Filter station dan tahun
+- Statistik deskriptif
+- Histogram dan density plot
+- Boxplot dan outlier visualization
+- Correlation heatmap
+- Regression plot
+- Pairplot
+- Quantile analysis
+- Normality testing
+- ANOVA statistical test
+- Download filtered dataset
+
+## Dataset
+
+Dataset yang digunakan adalah PRSA Beijing Air Quality Dataset periode 2013–2017.
+
+Dataset berisi informasi kualitas udara seperti:
+- PM2.5
+- PM10
+- SO2
+- NO2
+- CO
+- O3
+- Temperatur
+- Tekanan udara
+- Kecepatan angin
 
 ## Libraries
 
 - Python
 - Streamlit
 - Pandas
+- NumPy
 - Matplotlib
 - Seaborn
+- SciPy
+- Statsmodels

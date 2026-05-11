@@ -8,9 +8,6 @@ from scipy.stats import skew, kurtosis, shapiro
 from scipy import stats
 import statsmodels.api as sm
 
-# =========================================================
-# CONFIG
-# =========================================================
 
 st.set_page_config(
     page_title="Air Quality Dashboard",
@@ -19,9 +16,7 @@ st.set_page_config(
 
 sns.set(style='whitegrid')
 
-# =========================================================
 # TITLE
-# =========================================================
 
 st.title("Air Quality Dashboard")
 
@@ -29,9 +24,7 @@ st.markdown("""
 Dashboard analisis kualitas udara Beijing menggunakan dataset PRSA.
 """)
 
-# =========================================================
 # LOAD DATA
-# =========================================================
 
 @st.cache_data
 def load_data():
@@ -67,9 +60,7 @@ def load_data():
 
 all_df = load_data()
 
-# =========================================================
 # SIDEBAR
-# =========================================================
 
 st.sidebar.header("Filter")
 
@@ -90,9 +81,7 @@ filtered_df = all_df[
     (all_df['year'].isin(selected_year))
 ]
 
-# =========================================================
 # KPI
-# =========================================================
 
 st.subheader("Ringkasan Data")
 
@@ -118,9 +107,7 @@ col4.metric(
     round(filtered_df['TEMP'].mean(), 2)
 )
 
-# =========================================================
 # TABS
-# =========================================================
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "Descriptive",
@@ -130,9 +117,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "Raw Data"
 ])
 
-# =========================================================
 # TAB 1 - DESCRIPTIVE
-# =========================================================
 
 with tab1:
 
@@ -148,9 +133,7 @@ with tab1:
         filtered_df.describe(include='all')
     )
 
-# =========================================================
 # TAB 2 - UNIVARIATE
-# =========================================================
 
 with tab2:
 
@@ -232,9 +215,7 @@ with tab2:
 
     st.pyplot(fig4)
 
-# =========================================================
 # TAB 3 - MULTIVARIATE
-# =========================================================
 
 with tab3:
 
@@ -281,9 +262,7 @@ with tab3:
 
     st.pyplot(pairplot.fig)
 
-# =========================================================
 # TAB 4 - STATISTICAL TEST
-# =========================================================
 
 with tab4:
 
@@ -350,9 +329,7 @@ with tab4:
             "Tidak terdapat perbedaan signifikan rata-rata PM2.5 antar station"
         )
 
-# =========================================================
 # TAB 5 - RAW DATA
-# =========================================================
 
 with tab5:
 
@@ -369,9 +346,7 @@ with tab5:
         mime='text/csv'
     )
 
-# =========================================================
 # FOOTER
-# =========================================================
 
 st.markdown("---")
 
