@@ -1,27 +1,22 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from scipy.stats import skew, kurtosis, shapiro
-from scipy import stats
-import statsmodels.api as sm
-
+# PAGE CONFIG
 
 st.set_page_config(
     page_title="Air Quality Dashboard",
-    layout="wide"
+    layout="wide",
+    page_icon="🌍"
 )
-
-sns.set(style='whitegrid')
 
 # TITLE
 
-st.title("Air Quality Dashboard")
+st.title("🌍 Dashboard Analisis Kualitas Udara Beijing")
 
 st.markdown("""
-Dashboard analisis kualitas udara Beijing menggunakan dataset PRSA.
+Dashboard interaktif untuk menganalisis kualitas udara berdasarkan dataset PRSA.
 """)
 
 # LOAD DATA
@@ -50,40 +45,42 @@ def load_data():
         df = pd.read_csv(file)
         df_list.append(df)
 
-    all_df = pd.concat(df_list, ignore_index=True)
+    data = pd.concat(df_list, ignore_index=True)
 
-    all_df['datetime'] = pd.to_datetime(
-        all_df[['year', 'month', 'day', 'hour']]
+    # datetime
+    data['datetime'] = pd.to_datetime(
+        data[['year', 'month', 'day', 'hour']]
     )
 
-    return all_df
+    return data
 
-all_df = load_data()
+df = load_data()
 
 # SIDEBAR
 
-st.sidebar.header("Filter")
+st.sidebar.header("🔎 Filter Data")
 
-selected_station = st.sidebar.multiselect(
+stations = st.sidebar.multiselect(
     "Pilih Station",
-    options=all_df['station'].unique(),
-    default=all_df['station'].unique()
+    options=df['station'].unique(),
+    default=df['station'].unique()
 )
 
-selected_year = st.sidebar.multiselect(
+years = st.sidebar.multiselect(
     "Pilih Tahun",
-    options=sorted(all_df['year'].unique()),
-    default=sorted(all_df['year'].unique())
+    options=sorted(df['year'].unique()),
+    default=sorted(df['year'].unique())
 )
 
-filtered_df = all_df[
-    (all_df['station'].isin(selected_station)) &
-    (all_df['year'].isin(selected_year))
+# filter dataframe
+filtered_df = df[
+    (df['station'].isin(stations)) &
+    (df['year'].isin(years))
 ]
 
 # KPI
 
-st.subheader("Ringkasan Data")
+st.subheader("📌 Ringkasan Data")
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -107,119 +104,105 @@ col4.metric(
     round(filtered_df['TEMP'].mean(), 2)
 )
 
+# ======================================================
 # TABS
+# ======================================================
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "Descriptive",
-    "Univariate",
-    "Multivariate",
-    "Statistical Test",
-    "Raw Data"
+tab1, tab2, tab3, tab4 = st.tabs([
+    "📈 Trend",
+    "📊 Distribusi",
+    "🔥 Korelasi",
+    "📋 Raw Data"
 ])
 
-# TAB 1 - DESCRIPTIVE
+# ======================================================
+# TAB 1
+# ======================================================
 
 with tab1:
 
-    st.subheader("Descriptive Statistics")
+    st.subheader("Trend PM2.5")
 
-    st.dataframe(
-        filtered_df.describe()
+    trend_pm25 = filtered_df.groupby(
+        'year'
+    )['PM2.5'].mean()
+
+    fig, ax = plt.subplots(figsize=(12,5))
+
+    trend_pm25.plot(
+        marker='o',
+        linewidth=3,
+        ax=ax
     )
 
-    st.subheader("Descriptive Statistics (All Columns)")
+    ax.set_ylabel("PM2.5")
+    ax.set_xlabel("Tahun")
 
-    st.dataframe(
-        filtered_df.describe(include='all')
-    )
+    st.pyplot(fig)
 
-# TAB 2 - UNIVARIATE
+    # ==============================================
 
-with tab2:
+    st.subheader("Trend PM10")
 
-    numerical_cols = [
-        'PM2.5',
-        'PM10',
-        'SO2',
-        'NO2',
-        'CO',
-        'O3'
-    ]
+    trend_pm10 = filtered_df.groupby(
+        'year'
+    )['PM10'].mean()
 
-    # Histogram
-    st.subheader("Histogram")
+    fig2, ax2 = plt.subplots(figsize=(12,5))
 
-    fig, ax = plt.subplots(figsize=(12,6))
-
-    filtered_df[numerical_cols].hist(
-        bins=30,
-        figsize=(15,10)
-    )
-
-    st.pyplot(plt)
-
-    # KDE Plot
-    st.subheader("Density Plot PM2.5")
-
-    fig2, ax2 = plt.subplots(figsize=(10,5))
-
-    sns.kdeplot(
-        filtered_df['PM2.5'].dropna(),
-        fill=True,
+    trend_pm10.plot(
+        marker='o',
+        linewidth=3,
         ax=ax2
     )
 
+    ax2.set_ylabel("PM10")
+    ax2.set_xlabel("Tahun")
+
     st.pyplot(fig2)
 
-    # Boxplot
-    st.subheader("Boxplot PM2.5")
+# ======================================================
+# TAB 2
+# ======================================================
+
+with tab2:
+
+    st.subheader("Distribusi PM2.5")
 
     fig3, ax3 = plt.subplots(figsize=(10,5))
 
-    sns.boxplot(
-        x=filtered_df['PM2.5'],
+    sns.histplot(
+        filtered_df['PM2.5'].dropna(),
+        bins=30,
+        kde=True,
         ax=ax3
     )
 
     st.pyplot(fig3)
 
-    # Skewness & Kurtosis
-    st.subheader("Skewness & Kurtosis")
+    # ==============================================
 
-    skew_kurt = pd.DataFrame({
-        'Column': numerical_cols,
-        'Skewness': [
-            skew(filtered_df[col].dropna())
-            for col in numerical_cols
-        ],
-        'Kurtosis': [
-            kurtosis(filtered_df[col].dropna())
-            for col in numerical_cols
-        ]
-    })
+    st.subheader("Scatter Plot PM2.5 vs PM10")
 
-    st.dataframe(skew_kurt)
+    fig4, ax4 = plt.subplots(figsize=(10,6))
 
-    # Countplot
-    st.subheader("Station Frequency")
-
-    fig4, ax4 = plt.subplots(figsize=(12,5))
-
-    sns.countplot(
-        x='station',
+    sns.scatterplot(
+        x='PM2.5',
+        y='PM10',
+        hue='station',
         data=filtered_df,
         ax=ax4
     )
 
-    plt.xticks(rotation=45)
-
     st.pyplot(fig4)
 
-# TAB 3 - MULTIVARIATE
+# ======================================================
+# TAB 3
+# ======================================================
 
 with tab3:
 
-    st.subheader("Correlation Matrix")
+    st.subheader("Heatmap Korelasi")
 
     corr = filtered_df[
         ['PM2.5','PM10','SO2','NO2','CO','O3','TEMP','PRES','WSPM']
@@ -236,118 +219,38 @@ with tab3:
 
     st.pyplot(fig5)
 
-    # Regression Plot
-    st.subheader("Regression Plot PM2.5 vs PM10")
-
-    fig6, ax6 = plt.subplots(figsize=(10,6))
-
-    sns.regplot(
-        x='PM2.5',
-        y='PM10',
-        data=filtered_df,
-        scatter_kws={'alpha':0.3},
-        ax=ax6
-    )
-
-    st.pyplot(fig6)
-
-    # Pairplot
-    st.subheader("Pairplot")
-
-    sample_df = filtered_df[
-        ['PM2.5','PM10','SO2','NO2']
-    ].dropna().sample(500)
-
-    pairplot = sns.pairplot(sample_df)
-
-    st.pyplot(pairplot.fig)
-
-# TAB 4 - STATISTICAL TEST
+# ======================================================
+# TAB 4
+# ======================================================
 
 with tab4:
 
-    st.subheader("Quantile Analysis")
-
-    quantiles = filtered_df[
-        ['PM2.5','PM10','SO2','NO2']
-    ].quantile(
-        [0.05,0.10,0.25,0.50,0.75,0.90,0.95]
-    )
-
-    st.dataframe(quantiles)
-
-    # Q-Q Plot
-    st.subheader("Q-Q Plot PM2.5")
-
-    fig7 = sm.qqplot(
-        filtered_df['PM2.5'].dropna(),
-        line='s'
-    )
-
-    st.pyplot(fig7)
-
-    # Shapiro Test
-    st.subheader("Shapiro-Wilk Test")
-
-    sample_data = filtered_df[
-        'PM2.5'
-    ].dropna().sample(5000)
-
-    stat, p = shapiro(sample_data)
-
-    st.write(f"Statistics : {stat}")
-    st.write(f"P-Value : {p}")
-
-    if p > 0.05:
-        st.success("Data berdistribusi normal")
-    else:
-        st.error("Data tidak berdistribusi normal")
-
-    # ANOVA
-    st.subheader("ANOVA Test")
-
-    stations = filtered_df['station'].unique()
-
-    groups = [
-        filtered_df[
-            filtered_df['station'] == s
-        ]['PM2.5'].dropna()
-        for s in stations
-    ]
-
-    f_stat, p_val = stats.f_oneway(*groups)
-
-    st.write(f"F-Statistic : {f_stat}")
-    st.write(f"P-Value : {p_val}")
-
-    if p_val < 0.05:
-        st.success(
-            "Terdapat perbedaan signifikan rata-rata PM2.5 antar station"
-        )
-    else:
-        st.info(
-            "Tidak terdapat perbedaan signifikan rata-rata PM2.5 antar station"
-        )
-
-# TAB 5 - RAW DATA
-
-with tab5:
-
-    st.subheader("Dataset")
+    st.subheader("Raw Dataset")
 
     st.dataframe(filtered_df)
 
     csv = filtered_df.to_csv(index=False)
 
     st.download_button(
-        label="Download CSV",
+        label="⬇ Download CSV",
         data=csv,
-        file_name='filtered_data.csv',
+        file_name='filtered_air_quality.csv',
         mime='text/csv'
     )
 
-# FOOTER
+# ======================================================
+# INSIGHT
+# ======================================================
 
 st.markdown("---")
 
-st.caption("Air Quality Dashboard using Streamlit")
+st.subheader("🧠 Insight")
+
+st.markdown("""
+- PM2.5 dan PM10 memiliki korelasi positif yang cukup kuat.
+- Beberapa station menunjukkan tingkat polusi lebih tinggi dibanding lainnya.
+- Kecepatan angin cenderung membantu menurunkan konsentrasi polusi udara.
+- Polusi udara meningkat pada periode tertentu dan dapat dianalisis berdasarkan tren tahunan.
+""")
+
+st.caption("Dashboard dibuat menggunakan Streamlit")
